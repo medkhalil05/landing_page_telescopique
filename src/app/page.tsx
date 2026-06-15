@@ -23,8 +23,10 @@ import {
   Bath,
   Maximize,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Loader2
 } from "lucide-react";
+import emailjs from '@emailjs/browser';
 
 export default function LandingPage() {
   const [formState, setFormState] = useState({
@@ -34,6 +36,8 @@ export default function LandingPage() {
     city: "Casablanca"
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [showSticky, setShowSticky] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -78,12 +82,42 @@ export default function LandingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formState.name || !formState.phone || !formState.address) return;
-    setTimeout(() => {
+    
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "",
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "",
+        {
+          to_name: "Admin",
+          from_name: formState.name,
+          phone: formState.phone,
+          city: formState.city,
+          address: formState.address,
+          product_name: "البار التلسكوبي",
+          price: "129 درهم",
+        },
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || ""
+      );
+
       setIsSubmitted(true);
-    }, 800);
+      setFormState({
+        name: "",
+        phone: "",
+        address: "",
+        city: "Casablanca"
+      });
+    } catch (error) {
+      console.error("EmailJS Error:", error);
+      setErrorMessage("حدث خطأ أثناء إرسال الطلب. المرجو المحاولة مرة أخرى.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const scrollToForm = () => {
@@ -512,7 +546,7 @@ export default function LandingPage() {
                 <div className="flex flex-col items-center justify-center gap-2 mb-10">
                   <span className="text-white/70 text-xl line-through decoration-red-500 decoration-4">199 درهم</span>
                   <div className="text-6xl font-black flex items-center gap-2 text-gold drop-shadow-md">
-                    129 <span className="text-2xl mt-4">درهم فقط</span>
+                    169 <span className="text-2xl mt-4">درهم فقط</span>
                   </div>
                 </div>
 
@@ -602,10 +636,28 @@ export default function LandingPage() {
 
                   <button 
                     type="submit"
-                    className="w-full bg-primary hover:bg-primary-dark text-white font-black text-xl py-4 rounded-xl shadow-[0_10px_25px_rgba(255,107,0,0.3)] hover:shadow-[0_15px_35px_rgba(255,107,0,0.4)] transition-all transform hover:-translate-y-1 active:translate-y-0 mt-4 cursor-pointer"
+                    disabled={isLoading}
+                    className="w-full bg-primary hover:bg-primary-dark text-white font-black text-xl py-4 rounded-xl shadow-[0_10px_25px_rgba(255,107,0,0.3)] hover:shadow-[0_15px_35px_rgba(255,107,0,0.4)] transition-all transform hover:-translate-y-1 active:translate-y-0 mt-4 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-3"
                   >
-                    تأكيد الطلب 
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        جاري الإرسال...
+                      </>
+                    ) : (
+                      "تأكيد الطلب"
+                    )}
                   </button>
+
+                  {errorMessage && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }} 
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-500 text-sm font-bold text-center mt-3 bg-red-50 p-3 rounded-lg border border-red-100"
+                    >
+                      {errorMessage}
+                    </motion.div>
+                  )}
                   <p className="text-center text-sm text-slate-500 font-medium mt-4 flex items-center justify-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-green-500" />
                     معلوماتك آمنة ولن يتم مشاركتها
