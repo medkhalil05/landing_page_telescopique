@@ -9,8 +9,13 @@ const tajawal = Tajawal({
 });
 
 export const metadata: Metadata = {
-  title: "الحل الذكي لتعليق الستائر بدون حفر | بار تلسكوبي",
+  title: "AllmazAccessoire",
   description: "بار تلسكوبي قابل للتعديل يوفر لك حلاً عملياً وأنيقاً لتعليق الستائر وتنظيم المساحات بدون أدوات وبدون إتلاف الجدران.",
+   icons: {
+    icon: "/favicon.jpeg",
+    shortcut: "/favicon.jpeg",
+    apple: "/favicon.jpeg",
+  },
 };
 
 export default function RootLayout({
